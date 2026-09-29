@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NEST CBS | CIC Reporting Gateway</title>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* AXIS BANK CORPORATE THEME */
+        :root {
+            --brand-primary: #97144D; /* Deep Corporate Burgundy */
+            --brand-hover: #7A0F3D;
+            --bg-main: #F4F5F7;
+            --surface: #FFFFFF;
+            --text-dark: #2D3748;
+            --text-muted: #718096;
+            --border-light: #E2E8F0;
+        }
+
+        body { font-family: 'Open Sans', sans-serif; background-color: var(--bg-main); color: var(--text-dark); font-size: 14px; margin: 0; padding-bottom: 50px; }
+
+        /* Header */
+        .header-top { background-color: var(--brand-primary); color: #FFFFFF; padding: 16px 30px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 15px; letter-spacing: 0.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .header-top a { color: #E2E8F0; text-decoration: none; font-size: 13px; margin-left: 15px; font-weight: bold;}
+        .header-top a:hover { color: #FFFFFF; text-decoration: underline; }
+
+        /* Container */
+        .container { max-width: 1000px; margin: 40px auto; background: var(--surface); border: 1px solid var(--border-light); border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); overflow: hidden; }
+        .module-header { background-color: #2D3748; color: white; padding: 16px 24px; font-weight: 600; font-size: 16px; text-transform: uppercase; text-align: center; letter-spacing: 1px; }
+        
+        /* Image Banner */
+        .bureau-banner { text-align: center; padding: 20px; border-bottom: 1px solid var(--border-light); background: #F8F9FA; }
+        .bureau-banner img { height: 70px; object-fit: contain; mix-blend-mode: multiply; }
+
+        .content-area { padding: 30px; }
+
+        /* Layout & Sections */
+        .section-label { color: var(--brand-primary); font-weight: 700; font-size: 14px; margin-bottom: 20px; border-bottom: 2px solid var(--bg-main); padding-bottom: 8px; text-transform: uppercase; }
+        .grid-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 24px; }
+
+        /* Inputs */
+        input, select { width: 100%; padding: 10px 14px; border: 1px solid #CBD5E0; border-radius: 6px; font-size: 14px; font-family: inherit; color: var(--text-dark); transition: all 0.2s; outline: none; background-color: #FAFAFA; box-sizing: border-box; }
+        input:focus, select:focus { border-color: var(--brand-primary); background-color: #FFFFFF; box-shadow: 0 0 0 3px rgba(151, 20, 77, 0.1); }
+        input[readonly] { background-color: #E2E8F0; color: #4A5568; cursor: not-allowed; font-weight: bold; }
+        label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; text-transform: uppercase; }
+
+        /* Checkboxes */
+        .bureau-checkboxes { display: flex; gap: 20px; margin-bottom: 30px; background: #F7FAFC; padding: 15px; border-radius: 6px; border: 1px solid var(--border-light); }
+        .checkbox-item { display: flex; align-items: center; gap: 8px; font-weight: 600; color: #4A5568; cursor: pointer; }
+        .checkbox-item input { width: 18px; height: 18px; cursor: pointer; accent-color: var(--brand-primary); }
+
+        /* Buttons */
+        .btn-fetch { background: #E2E8F0; border: 1px solid #CBD5E0; color: #2D3748; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; text-transform: uppercase; height: 41px; align-self: flex-end; transition: 0.2s; }
+        .btn-fetch:hover { background: #CBD5E0; color: black; }
+        
+        .submit-main { background: var(--brand-primary); color: white; border: none; padding: 14px 30px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: all 0.2s; font-size: 14px; text-transform: uppercase; width: 100%; box-shadow: 0 4px 6px rgba(151, 20, 77, 0.2); margin-top: 20px; }
+        .submit-main:hover { background: var(--brand-hover); transform: translateY(-1px); box-shadow: 0 6px 10px rgba(151, 20, 77, 0.3); }
+
+        /* Visual Status Indicators */
+        .npa-red { color: #E53E3E !important; font-weight: bold; border-color: #E53E3E; background: #FFF5F5; }
+        .std-green { color: #38A169 !important; font-weight: bold; border-color: #38A169; background: #F0FFF4; }
+        .sma-orange { color: #DD6B20 !important; font-weight: bold; border-color: #DD6B20; background: #FFFAF0; }
+
+        /* Advanced CIBIL Grid Styles */
+        .cb-summary-card { border: 1px solid #E2E8F0; border-radius: 8px; padding: 16px; background: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 12px; font-size: 13px; }
+        .cb-summary-row { display: flex; justify-content: space-between; align-items: center; }
+        .cb-summary-label { color: #718096; }
+        .cb-summary-value { font-weight: 600; color: #2D3748; }
+        .cb-legend-item { display: flex; align-items: center; gap: 8px; }
+        .cb-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <!-- Header with Logo -->
+    <div class="header-top" style="background-color: #FFFFFF; border-bottom: 3px solid #97144D; padding: 12px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <img src="logo.png" alt="NEST Small Finance Bank" style="height: 42px; object-fit: contain;">
+            <span style="font-size: 11px; font-weight: 700; color: #718096; border-left: 2px solid #CBD5E0; padding-left: 15px; text-transform: uppercase; letter-spacing: 0.5px;">Credit Bureau Reporting Gateway</span>
+        </div>
+        <div style="color: #2D3748; font-weight: 600; font-size: 13px;">USER: ADMIN <a href="staff.html" style="color: #97144D; margin-left: 12px; text-decoration: none; font-weight: 700;">➔ RETURN TO MAIN PORTAL</a></div>
+    </div>
+        <!-- Bureau Logos -->
+        <div class="bureau-banner">
+            <img src="what-is-the-function-of-equifax-experian-and-transunion-what-you-need-to-know.jpg" alt="TransUnion CIBIL, Experian, Equifax">
+        </div>
+
+        <div class="content-area">
+            
+            <!-- Target Bureaus -->
+            <div class="section-label">1. Select Target Bureaus</div>
+            <div class="bureau-checkboxes">
+                <label class="checkbox-item"><input type="checkbox" id="chk-cibil" checked> TU CIBIL</label>
+                <label class="checkbox-item"><input type="checkbox" id="chk-experian" checked> Experian</label>
+                <label class="checkbox-item"><input type="checkbox" id="chk-equifax" checked> Equifax</label>
+                <label class="checkbox-item"><input type="checkbox" id="chk-crif" checked> CRIF Highmark</label>
+            </div>
+
+            <!-- Fetch Loan Details -->
+            <div class="section-label">2. Loan Account Lookup</div>
+            <div style="display: flex; gap: 15px; margin-bottom: 30px;">
+                <div style="flex: 1;">
+                    <label>Enter Active Loan Account Number</label>
+                    <input type="text" id="fetch-loan-no" placeholder="e.g. LN1234567">
+                </div>
+                <button onclick="fetchLoanData()" class="btn-fetch">Fetch Core Data</button>
+            </div>
+
+            <!-- VISUAL CREDIT HISTORY GRID -->
+            <div id="cibil-visual-section" style="display: none; margin-bottom: 40px; border-top: 1px solid var(--border-light); padding-top: 30px;">
+                <div class="section-label">Borrower Credit Report (Historical View)</div>
+                
+                <!-- Summary Cards -->
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 24px;">
+                    <div class="cb-summary-card">
+                        <div class="cb-summary-row"><span class="cb-summary-label">Product Type</span><span id="cb-prod-type" class="cb-summary-value"></span></div>
+                        <div class="cb-summary-row"><span class="cb-summary-label">Account Number</span><span id="cb-acc-no" class="cb-summary-value"></span></div>
+                        <div class="cb-summary-row"><span class="cb-summary-label">Ownership</span><span class="cb-summary-value">Individual</span></div>
+                    </div>
+                    <div class="cb-summary-card">
+                        <div class="cb-summary-row"><span class="cb-summary-label">Last Payment Date</span><span id="cb-last-pay" class="cb-summary-value">N/A</span></div>
+                        <div class="cb-summary-row"><span class="cb-summary-label">Last Updated Date</span><span id="cb-last-update" class="cb-summary-value"></span></div>
+                        <div class="cb-summary-row"><span class="cb-summary-label">Date Opened</span><span id="cb-date-open" class="cb-summary-value"></span></div>
+                    </div>
+                    <div class="cb-summary-card">
+                        <div class="cb-summary-row"><span class="cb-summary-label">Current Outstanding</span><span id="cb-curr-out" class="cb-summary-value"></span></div>
+                        <div class="cb-summary-row"><span class="cb-summary-label">Overdue Amount</span><span id="cb-overdue" class="cb-summary-value"></span></div>
+                        <div class="cb-summary-row"><span class="cb-summary-label">Sanction Amount</span><span id="cb-sanc-amt" class="cb-summary-value"></span></div>
+                    </div>
+                </div>
+
+                <!-- Payment History Header & Legend -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <h3 style="font-weight: 700; color: #2D3748; margin: 0; font-size: 16px;">Payment History Grid</h3>
+                    <span id="cb-delay-badge" style="background: #EBF8FF; color: #2B6CB0; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; border: 1px solid #BEE3F8;">Payment Delayed by: 0 days</span>
+                </div>
+
+                <div style="display: flex; gap: 30px; background: #F7FAFC; padding: 12px; border-radius: 8px; margin-bottom: 20px; justify-content: center; border: 1px solid #E2E8F0; font-size: 12px; font-weight: 600; color: #4A5568;">
+                    <div class="cb-legend-item"><div class="cb-icon" style="border: 2px solid #CBD5E0; color: #A0AEC0;">-</div> Not Reported</div>
+                    <div class="cb-legend-item"><div class="cb-icon" style="border: 2px solid #38A169; background: #F0FFF4; color: #38A169;">✓</div> Paid on time</div>
+                    <div class="cb-legend-item"><div class="cb-icon" style="border: 2px solid #DD6B20; background: #FFFAF0; color: #DD6B20;">!</div> 01-89 days late</div>
+                    <div class="cb-legend-item"><div class="cb-icon" style="border: 2px solid #E53E3E; background: #FFF5F5; color: #E53E3E;">!</div> 90+ days late</div>
+                </div>
+
+                <!-- Grid Container -->
+                <div id="cibil-grid-container" style="overflow-x: auto; background: white; padding: 24px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #E2E8F0;">
+                    <!-- Javascript populates table here -->
+                </div>
+            </div>
+
+            <!-- The Reporting Form -->
+            <div id="reporting-form" style="display: none; border-top: 1px solid var(--border-light); padding-top: 30px;">
+                <div class="section-label">3. Account Information (Auto-Fetched)</div>
+                <div class="grid-row">
+                    <div><label>Borrower Name</label><input type="text" id="r-name" readonly></div>
+                    <div><label>CIF Number</label><input type="text" id="r-cif" readonly></div>
+                    <div><label>PAN Card</label><input type="text" id="r-pan" readonly></div>
+                    <div><label>Loan Type</label><input type="text" id="r-type" readonly></div>
+                </div>
+
+                <!-- Financial Data -->
+                <div class="section-label">4. Update Monthly Financials</div>
+                <div class="grid-row">
+                    <div><label>Current Outstanding Balance (₹)</label><input type="number" id="r-bal"></div>
+                    <div><label>Monthly EMI (₹)</label><input type="number" id="r-emi"></div>
+                </div>
+
+                <div class="grid-row">
+                    <div>
+                        <label>Days Past Due (DPD) - Enter exact days (e.g. 16, 45, 90)</label>
+                        <input type="number" id="r-dpd" value="0" min="0" oninput="updateAssetClass()">
+                    </div>
+                    <div>
+                        <label>Asset Classification (Auto-Calculated)</label>
+                        <input type="text" id="r-asset-class" value="STANDARD" readonly class="std-green">
+                    </div>
+                </div>
+
+                <!-- Account Status Reporting -->
+                <div class="section-label">5. Bureau Account Status & Historical Date Tagging</div>
+                <div class="grid-row">
+                    <div>
+                        <label>Reporting Account Status</label>
+                        <select id="r-status" onchange="checkWarning(this.value)">
+                            <option value="ACTIVE">11 - Active / Open</option>
+                            <option value="CLOSED">13 - Closed (Paid in Full)</option>
+                            <option value="SETTLED">17 - Settled (Post Compromise)</option>
+                            <option value="WRITTEN_OFF">09 - Written-Off</option>
+                            <option value="WILLFUL_DEFAULT">89 - Willful Default / Suit Filed</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Target Reporting Date (Select Any Past/Current Date)</label>
+                        <input type="date" id="r-report-date">
+                    </div>
+                </div>
+
+                <button onclick="submitToBureau()" class="submit-main" id="btn-submit">Push Data to Selected Bureaus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- INTERNAL JAVASCRIPT ENGINE -->
+    <script>
+        let currentLoanContext = null;
+
+        // Default reporting date to today YYYY-MM-DD
+        document.getElementById('r-report-date').value = new Date().toISOString().split('T')[0];
+
+        function getDB() {
+            const possibleKeys = ['NEST_SFB_v25_PRO', 'NEST_SFB_v23_PRO', 'NEST_SFB_v22_PRO', 'NEST_SFB_TOTAL_v18', 'nest_db'];
+            let db = null;
+            
+            for (let key of possibleKeys) {
+                let raw = localStorage.getItem(key);
+                if (raw) {
+                    db = JSON.parse(raw);
+                    break;
+                }
+            }
+
+            if (!db) {
+                alert("Database not found! Please open staff.html (Main Portal) first to initialize the core system.");
+                return null;
+            }
+
+            if (!db.activeLoans) db.activeLoans = [];
+            return db;
+        }
+
+        function fetchLoanData() {
+            try {
+                const loanNo = document.getElementById('fetch-loan-no').value.trim();
+                if (!loanNo) return alert("Please enter a Loan Account Number.");
+
+                const db = getDB();
+                if (!db) return;
+
+                const loan = db.activeLoans.find(x => x.loanAcc === loanNo);
+                
+                if (!loan) {
+                    alert("Loan Account Not Found in Core System. Make sure the loan number is correct and has been disbursed.");
+                    return;
+                }
+
+                currentLoanContext = loan;
+
+                // 1. POPULATE THE VISUAL GRID
+                renderCibilGrid(loan);
+
+                // 2. POPULATE THE FORM
+                document.getElementById('r-name').value = (loan.name || "").toUpperCase();
+                document.getElementById('r-cif').value = loan.cif || "";
+                document.getElementById('r-pan').value = loan.pan || "NOT_AVAILABLE";
+                document.getElementById('r-type').value = loan.type || "TERM_LOAN";
+                
+                let roughEmi = 0;
+                if(loan.amt && loan.roi && loan.term) {
+                    let interest = loan.amt * (loan.roi/100) * (loan.term/12);
+                    roughEmi = Math.round((loan.amt + interest) / loan.term);
+                }
+                
+                document.getElementById('r-bal').value = Math.round(loan.amt || 0);
+                document.getElementById('r-emi').value = roughEmi;
+                
+                if(loan.dpdStatus !== undefined) {
+                    document.getElementById('r-dpd').value = loan.dpdStatus;
+                    updateAssetClass();
+                }
+
+                document.getElementById('reporting-form').style.display = 'block';
+                document.getElementById('reporting-form').scrollIntoView({ behavior: 'smooth' });
+
+            } catch (err) {
+                console.error(err);
+                alert("An error occurred while fetching data. Check F12 Console for details.");
+            }
+        }
+
+        function renderCibilGrid(l) {
+            document.getElementById('cb-prod-type').innerText = l.type || 'TERM LOAN';
+            document.getElementById('cb-acc-no').innerText = "XXXX" + (l.loanAcc ? l.loanAcc.slice(-4) : "0000");
+            
+            let lastUpdate = l.lastModified || l.disburseDate || 'N/A';
+            document.getElementById('cb-last-update').innerText = lastUpdate.split(',')[0];
+            document.getElementById('cb-date-open').innerText = l.disburseDate ? l.disburseDate.split(',')[0] : 'N/A';
+            
+            let currAmt = parseFloat(l.amt) || 0;
+            document.getElementById('cb-curr-out').innerText = "₹" + currAmt.toLocaleString('en-IN');
+            document.getElementById('cb-sanc-amt').innerText = "₹" + Math.round(currAmt * 1.2).toLocaleString('en-IN'); 
+            
+            let overdueAmt = 0;
+            let currentDpdNum = parseInt(l.dpdStatus) || 0;
+            let delayBadge = `Payment Delayed by: ${currentDpdNum} days`;
+
+            if(currentDpdNum > 0) {
+                 overdueAmt = Math.round(currAmt * 0.05); 
+                 document.getElementById('cb-delay-badge').style = "background: #FFF5F5; color: #C53030; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; border: 1px solid #FEB2B2;";
+            } else {
+                 document.getElementById('cb-delay-badge').style = "background: #EBF8FF; color: #2B6CB0; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 700; border: 1px solid #BEE3F8;";
+            }
+            
+            document.getElementById('cb-overdue').innerText = overdueAmt > 0 ? "₹" + overdueAmt.toLocaleString('en-IN') : "NA";
+            document.getElementById('cb-delay-badge').innerText = delayBadge;
+
+            // Generate Calendar Grid based on historical cicHistory records
+            let currentYear = new Date().getFullYear();
+            let years = [currentYear, currentYear-1, currentYear-2, currentYear-3]; 
+            let hMap = {};
+            
+            if(l.cicHistory) {
+                l.cicHistory.forEach(h => {
+                    let y, m;
+                    if(h.reportDate) {
+                        let parts = h.reportDate.split('-');
+                        y = parseInt(parts[0]);
+                        m = parseInt(parts[1]);
+                    } else if(h.reportMonth) {
+                        let parts = h.reportMonth.split('-');
+                        y = parseInt(parts[0]);
+                        m = parseInt(parts[1]);
+                    } else {
+                        let d = new Date(h.date);
+                        y = d.getFullYear();
+                        m = d.getMonth() + 1;
+                    }
+                    if(!hMap[y]) hMap[y] = {};
+                    hMap[y][m] = h.dpd;
+                });
+            }
+            
+            let months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+            let tableHTML = `<table style="width:100%; text-align:center; border-collapse: separate; border-spacing: 0 16px;">`;
+            tableHTML += `<tr><td width="60"></td>`;
+            months.forEach(m => tableHTML += `<td style="font-weight:700; color:#4A5568; font-size:12px;">${m}</td>`);
+            tableHTML += `</tr>`;
+            
+            years.forEach(y => {
+                tableHTML += `<tr><td style="font-weight:700; font-size:15px; color:#2D3748; text-decoration:underline; text-align:left;">${y}</td>`;
+                for(let m=1; m<=12; m++) {
+                    let dpdVal = hMap[y] ? hMap[y][m] : null;
+                    let iconHTML = `<div class="cb-icon" style="border: 2px solid #CBD5E0; color: #A0AEC0; margin: auto;">-</div>`;
+                    
+                    if(dpdVal !== null && dpdVal !== undefined) {
+                        let numDpd = parseInt(dpdVal) || 0;
+                        if(numDpd === 0) {
+                            iconHTML = `<div class="cb-icon" style="border: 2px solid #38A169; background: #F0FFF4; color: #38A169; margin: auto;" title="DPD: 0">✓</div>`;
+                        } else if(numDpd > 0 && numDpd < 90) {
+                            iconHTML = `<div class="cb-icon" style="border: 2px solid #DD6B20; background: #FFFAF0; color: #DD6B20; margin: auto;" title="DPD: ${numDpd}">!</div>`;
+                        } else {
+                            iconHTML = `<div class="cb-icon" style="border: 2px solid #E53E3E; background: #FFF5F5; color: #E53E3E; margin: auto;" title="DPD: ${numDpd}">!</div>`;
+                        }
+                    }
+                    tableHTML += `<td>${iconHTML}</td>`;
+                }
+                tableHTML += `</tr>`;
+            });
+            tableHTML += `</table>`;
+            
+            document.getElementById('cibil-grid-container').innerHTML = tableHTML;
+            document.getElementById('cibil-visual-section').style.display = 'block';
+        }
+
+        function updateAssetClass() {
+            const dpdVal = parseInt(document.getElementById('r-dpd').value) || 0;
+            const assetField = document.getElementById('r-asset-class');
+            assetField.classList.remove('std-green', 'npa-red', 'sma-orange');
+
+            if (dpdVal === 0) {
+                assetField.value = "STANDARD (On Time)";
+                assetField.classList.add('std-green');
+            } else if (dpdVal > 0 && dpdVal <= 60) {
+                assetField.value = `SMA (Special Mention - ${dpdVal} Days)`;
+                assetField.classList.add('sma-orange');
+            } else {
+                assetField.value = `NPA (Non-Performing Asset - ${dpdVal} Days)`;
+                assetField.classList.add('npa-red');
+            }
+        }
+
+        function checkWarning(val) {
+            if(val === 'WRITTEN_OFF' || val === 'WILLFUL_DEFAULT' || val === 'SETTLED') {
+                alert("WARNING: Reporting this status will severely impact the customer's credit score across all bureaus and may initiate recovery protocols.");
+            }
+        }
+
+        function submitToBureau() {
+            const cibil = document.getElementById('chk-cibil').checked;
+            const experian = document.getElementById('chk-experian').checked;
+            const equifax = document.getElementById('chk-equifax').checked;
+            const crif = document.getElementById('chk-crif').checked;
+
+            if (!cibil && !experian && !equifax && !crif) {
+                return alert("Please select at least one Credit Information Company to report to.");
+            }
+
+            const db = getDB();
+            if(!db) return;
+
+            const lIdx = db.activeLoans.findIndex(x => x.loanAcc === currentLoanContext.loanAcc);
+            if(lIdx === -1) return alert("System Error: Loan context lost.");
+
+            const currentDpd = parseInt(document.getElementById('r-dpd').value) || 0;
+            const repStatus = document.getElementById('r-status').value;
+            const reportDate = document.getElementById('r-report-date').value; // e.g. "2026-03-15"
+
+            db.activeLoans[lIdx].amt = parseFloat(document.getElementById('r-bal').value);
+            db.activeLoans[lIdx].dpdStatus = currentDpd;
+            db.activeLoans[lIdx].assetClass = document.getElementById('r-asset-class').value;
+            db.activeLoans[lIdx].lastModified = new Date().toLocaleString();
+            
+            if (repStatus !== 'ACTIVE') {
+                db.activeLoans[lIdx].status = repStatus;
+                db.activeLoans[lIdx].closeDate = new Date().toLocaleString();
+            }
+
+            // Push to historical logs ensuring unique report date entries
+            if(!db.activeLoans[lIdx].cicHistory) db.activeLoans[lIdx].cicHistory = [];
+            
+            // Remove existing entry for the exact same target date if overwritten
+            db.activeLoans[lIdx].cicHistory = db.activeLoans[lIdx].cicHistory.filter(h => h.reportDate !== reportDate);
+
+            db.activeLoans[lIdx].cicHistory.push({
+                reportDate: reportDate, // Stores selected full date (e.g. 2026-03-15)
+                date: new Date().toLocaleString(),
+                dpd: currentDpd,
+                status: repStatus,
+                bureausReported: [cibil?"CIBIL":"", experian?"Experian":"", equifax?"Equifax":"", crif?"CRIF":""].filter(Boolean).join(", ")
+            });
+
+            // Auto-adjust CIBIL score based on reported DPD
+            if(!db.creditBureau) db.creditBureau = {};
+            let currentScore = db.creditBureau[currentLoanContext.cif] || 650;
+            let scoreChange = 0;
+
+            if (currentDpd === 0) {
+                scoreChange = Math.floor(Math.random() * 8) + 5;
+                currentScore = Math.min(900, currentScore + scoreChange);
+            } else if (currentDpd > 0 && currentDpd <= 30) {
+                scoreChange = -20;
+                currentScore = Math.max(300, currentScore + scoreChange);
+            } else {
+                scoreChange = -45;
+                currentScore = Math.max(300, currentScore + scoreChange);
+            }
+            db.creditBureau[currentLoanContext.cif] = currentScore;
+
+            // Save back preserving main database keys
+            let activeKey = 'NEST_SFB_v22_PRO';
+            for (let k of ['NEST_SFB_v25_PRO', 'NEST_SFB_v23_PRO', 'NEST_SFB_v22_PRO', 'NEST_SFB_TOTAL_v18', 'nest_db']) {
+                if (localStorage.getItem(k)) { activeKey = k; break; }
+            }
+            localStorage.setItem(activeKey, JSON.stringify(db));
+
+            const btn = document.getElementById('btn-submit');
+            btn.innerText = "TRANSMITTING DATA VIA SECURE API...";
+            btn.style.background = "#4A5568";
+            
+            setTimeout(() => {
+                alert(`SUCCESS! Data transmitted for date [${reportDate}].\n\nLoan: ${currentLoanContext.loanAcc}\nReported DPD: ${currentDpd} Days\nNew CIBIL Score: ${currentScore} (Adjusted by ${scoreChange})`);
+                
+                btn.innerText = "Push Data to Selected Bureaus";
+                btn.style.background = "var(--brand-primary)";
+                document.getElementById('reporting-form').style.display = 'none';
+                document.getElementById('cibil-visual-section').style.display = 'none';
+                document.getElementById('fetch-loan-no').value = '';
+            }, 1500); 
+        }
+    </script>
+</body>
+</html>

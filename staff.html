@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NEST CBS | Central Branch Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+   <!-- Top Header with Logo -->
+    <div class="header-top" style="background-color: #FFFFFF; border-bottom: 3px solid #97144D; padding: 12px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <img src="logo.png" alt="NEST Small Finance Bank" style="height: 42px; object-fit: contain;">
+            <span style="font-size: 11px; font-weight: 700; color: #718096; border-left: 2px solid #CBD5E0; padding-left: 15px; text-transform: uppercase; letter-spacing: 0.5px;">Core Banking System V25.0</span>
+        </div>
+        <div style="color: #2D3748; font-weight: 600; font-size: 13px;">BR: 001 | USER: ADMIN <a href="#" style="color: #97144D; margin-left: 12px; text-decoration: none; font-weight: 700;">LOGOUT</a></div>
+    </div>
+
+    <div class="menu-bar">
+        <button onclick="showMod('search')" class="underline cursor-pointer font-bold">[F2] INQUIRY</button>
+        <button onclick="showMod('hacm')" class="underline cursor-pointer font-bold">[F3] OPENING</button>
+        <button onclick="showMod('hver')" class="underline cursor-pointer font-bold">[F4] COMPLIANCE</button>
+        <button onclick="showMod('ledger')" class="underline cursor-pointer font-bold">[F5] MASTER LEDGER</button>
+        <button onclick="showMod('teller')" class="underline cursor-pointer font-bold">[F6] TELLER OPS</button>
+        <button onclick="showMod('override')" class="underline cursor-pointer font-bold text-red-800">[F7] EXCEPTION DESK</button>
+        <button onclick="showMod('los-apply')" class="underline cursor-pointer font-bold text-emerald-800">[F8] LOAN ORIGINATION</button>
+        <button onclick="showMod('los-process')" class="underline cursor-pointer font-bold text-emerald-800">[F9] LOAN PROCESSING</button>
+    </div>
+
+    <div class="flex flex-1 overflow-hidden">
+        <aside class="sidebar">
+            <div class="border border-gray-400 p-3 bg-[#f0f0e1] mb-6">
+                <p class="font-bold border-b border-gray-400 mb-2 text-[10px] uppercase">CIF Inquiry</p>
+                <input type="text" id="sideInq" placeholder="Enter Acc/CIF">
+                <button onclick="inquire(document.getElementById('sideInq').value.trim())" class="pinnacle-btn w-full mt-3">EXECUTE</button>
+            </div>
+            
+            <div class="border border-gray-400 p-3 bg-white text-xs mb-6 shadow-sm">
+                <p class="font-bold border-b mb-2 text-blue-900 uppercase">Credit Bureau Sync</p>
+                <button onclick="runMonthlyBureauReporting()" class="pinnacle-btn w-full !bg-blue-50 !text-blue-900 !border-blue-900">RUN MONTHLY REPORT</button>
+            </div>
+
+            <div class="border border-gray-400 p-3 bg-white text-xs">
+                <p class="font-bold border-b mb-2 uppercase">Branch Vault</p>
+                <p id="vault-amt" class="text-2xl font-bold text-red-700">₹0.00</p>
+            </div>
+        </aside>
+
+        <main class="workspace">
+            
+            <!-- [F2] Inquiry -->
+            <div id="mod-search" class="module">
+                <div class="bg-[#000080] text-white p-2 px-4 mb-8 font-bold flex justify-between items-center uppercase">
+                    <span>Customer 360 Degree Inquiry - CIF Master</span>
+                    <button id="btn-report-err" onclick="reportError()" class="pinnacle-btn bg-red-100 text-red-900 border-red-900" style="padding: 2px 10px;">REPORT ERROR</button>
+                </div>
+                <div class="data-section"><span class="section-label">ACCOUNT SUMMARY</span>
+                    <div class="grid grid-cols-2 gap-x-10 gap-y-4 font-bold">
+                        <div>NAME: <span id="q-name"></span></div><div>BALANCE: <span id="q-bal" class="text-emerald-700"></span></div>
+                        <div>ACC NO: <span id="q-acc"></span></div><div>SCHEME: <span id="q-scheme"></span></div>
+                        <div>CIF NO: <span id="q-cif"></span></div><div>CKYC NO: <span id="q-ckyc" class="text-red-700"></span></div>
+                    </div>
+                </div>
+                <div class="data-section"><span class="section-label">EXTENDED IDENTITY DETAILS</span>
+                    <div class="grid grid-cols-3 gap-x-6 gap-y-4 text-xs">
+                        <div><label>Father's Name</label><span id="q-father"></span></div><div><label>Mother's Name</label><span id="q-mother"></span></div><div><label>Date of Birth</label><span id="q-dob"></span></div>
+                        <div><label>Education</label><span id="q-edu"></span></div><div><label>Occupation</label><span id="q-emp"></span></div><div><label>PAN Card</label><span id="q-pan"></span></div>
+                        <div><label>Aadhaar (Masked)</label><span id="q-aad"></span></div><div><label>Nominee</label><span id="q-nom"></span></div>
+                    </div>
+                    <div class="mt-4 border-t pt-4 font-bold text-[11px]"><label>Full Communication Address</label><p id="q-add"></p></div>
+                </div>
+            </div>
+
+            <!-- [F3] Opening -->
+            <div id="mod-hacm" class="module active">
+                <div class="bg-[#000080] text-white p-2 px-4 mb-8 font-bold uppercase">Retail Account Origination (HACM)</div>
+                <div class="data-section"><span class="section-label">1. IDENTITY & CONTACT DETAILS</span>
+                    <div class="grid grid-cols-3 gap-x-6 gap-y-4">
+                        <div><label>Holder Full Name</label><input type="text" id="h-name"></div>
+                        <div><label>Father's Name</label><input type="text" id="h-father"></div>
+                        <div><label>Mother's Name</label><input type="text" id="h-mother"></div>
+                        <div><label>Date of Birth</label><input type="date" id="h-dob"></div>
+                        <div><label>Education</label><select id="h-edu"><option>10th Pass</option><option>12th Pass</option><option>Graduation</option><option>Post Graduation</option></select></div>
+                        <div><label>Employment</label><select id="h-emp"><option>Salaried</option><option>Business</option><option>Self Employed</option><option>Student</option></select></div>
+                        <div><label>Marital Status</label><select id="h-marital"><option>Single</option><option>Married</option><option>Divorced</option></select></div>
+                        <div><label>PAN Number</label><input type="text" id="h-pan" maxlength="10"></div>
+                        <div><label>Aadhaar Number</label><input type="text" id="h-aad" maxlength="12"></div>
+                        <div><label>Primary Mobile</label><input type="text" id="h-mob"></div>
+                        <div><label>Alternate Mobile</label><input type="text" id="h-alt-mob"></div>
+                        <div><label>Email ID</label><input type="email" id="h-email"></div>
+                        <div class="col-span-3"><label>Full KYC Address</label><textarea id="h-add" rows="2"></textarea></div>
+                    </div>
+                </div>
+                <div class="data-section"><span class="section-label">2. NOMINATION DETAILS</span>
+                    <div class="grid grid-cols-3 gap-x-6 gap-y-4">
+                        <div><label>Nominee Name</label><input type="text" id="h-nom-name"></div>
+                        <div><label>Relation</label><input type="text" id="h-nom-rel"></div>
+                        <div><label>Nominee Contact</label><input type="text" id="h-nom-contact"></div>
+                    </div>
+                </div>
+                <div class="data-section"><span class="section-label">3. LIABILITY PRODUCT & DEBIT CARD</span>
+                    <div class="grid grid-cols-2 gap-x-10 gap-y-4">
+                        <div><label>Account Scheme</label><select id="h-scheme" onchange="updateSchemeInfo()"><option value="LOTUS">Lotus Savings (Zero MAB)</option><option value="SKY">Sky Savings (MAB 1000)</option><option value="SUPER">Super Savings (MAB 5000)</option><option value="REG_CUR">Regular Current</option></select></div>
+                        <div><label>Initial Cash Credit (₹)</label><input type="number" id="h-dep" value="500"></div>
+                        <div><label>Issue Debit Card?</label><select id="h-card-req"><option value="NO">No</option><option value="YES">Yes</option></select></div>
+                        <div><label>Card Variant</label><select id="h-card-type"><option value="RUPAY_LITE">RuPay Lite (₹0 / ₹270)</option><option value="RUPAY_STD">RuPay Classic (₹199 / ₹270)</option><option value="VISA_PLAT">Visa Platinum (₹299 / ₹399)</option></select></div>
+                    </div>
+                </div>
+                <button onclick="submitHACM()" class="submit-main">SUBMIT FOR KYC VERIFICATION</button>
+            </div>
+
+            <!-- [F4] Compliance -->
+            <div id="mod-hver" class="module">
+                <div class="bg-[#000080] text-white p-2 px-4 mb-6 font-bold uppercase">Compliance Desk (HVER)</div>
+                <div class="data-section"><span class="section-label">AWAITING CKYC</span>
+                    <table class="w-full text-left bg-white"><thead class="bg-gray-200"><tr><th class="p-2 border text-sm">APP</th><th class="p-2 border text-sm">NAME</th><th class="p-2 border text-sm">PAN</th><th class="p-2 border text-sm">ACTION</th></tr></thead><tbody id="hver-tbody"></tbody></table>
+                    <div id="ckyc-loader" class="hidden mt-6 text-center"><div class="loader"></div> <span class="ml-2 font-bold">Inquiring Central Registry...</span></div>
+                    <div id="ckyc-output" class="hidden mt-6 bg-blue-50 border-2 border-blue-900 p-6">
+                        <p class="font-bold text-blue-900 uppercase text-xs">Generated CKYC ID:</p>
+                        <p class="mt-2"><span id="gen-ckyc-val" class="font-black text-xl text-red-700 bg-yellow-100 px-2"></span></p>
+                        <div class="mt-4 flex gap-4"><input type="text" id="ckyc-pasted" placeholder="Paste ID here" class="w-72 border-2 border-blue-900"><button onclick="verifyAndApprove()" class="pinnacle-btn bg-blue-900 text-white">VERIFY & ACTIVATE</button></div>
+                    </div>
+                </div>
+                <div class="data-section mt-10"><span class="section-label">READY FOR PRINTING</span>
+                    <table class="w-full text-left bg-white"><thead class="bg-gray-200"><tr><th class="p-2 border text-sm">APP</th><th class="p-2 border text-sm">NAME</th><th class="p-2 border text-sm">STATUS</th><th class="p-2 border text-sm">ACTION</th></tr></thead><tbody id="ready-tbody"></tbody></table>
+                </div>
+            </div>
+
+            <!-- [F5] Master Ledger -->
+            <div id="mod-ledger" class="module">
+                <div class="bg-[#000080] text-white p-2 px-4 mb-4 font-bold uppercase">Retail Master Ledger</div>
+                <div id="ledger-container"></div>
+            </div>
+
+            <!-- [F6] Teller -->
+            <div id="mod-teller" class="module">
+                <div class="bg-[#000080] text-white p-2 px-4 mb-8 font-bold uppercase">Teller Cash Operations (HTM)</div>
+                <div class="data-section"><span class="section-label">ACCOUNT LOOKUP</span>
+                    <div class="flex gap-4"><input type="text" id="t-inq" placeholder="Enter Account/CIF" class="w-72"><button onclick="fetchTellerAccount()" class="pinnacle-btn">FETCH DETAILS</button></div>
+                    <div id="t-display" class="mt-6 flex gap-10 font-bold"><div>HOLDER: <span id="t-display-name"></span></div><div>BAL: <span id="t-display-bal"></span></div></div>
+                </div>
+                <div id="t-post-area" class="data-section hidden"><span class="section-label">POST TRANSACTION</span>
+                    <div class="grid grid-cols-2 gap-10"><div><label>Type</label><select id="t-type"><option value="CASH_CR">Cash Deposit</option><option value="CASH_DR">Cash Withdrawal</option></select></div><div><label>Amount</label><input type="number" id="t-amt"></div></div>
+                    <button onclick="executeTellerTxn()" class="pinnacle-btn mt-6 block mx-auto">POST TRANSACTION & PRINT SLIP</button>
+                </div>
+            </div>
+
+            <!-- [F8] LOS Apply -->
+            <div id="mod-los-apply" class="module">
+                <div class="bg-emerald-900 text-white p-2 px-4 mb-8 font-bold uppercase">Loan Origination System (LOS)</div>
+                <div class="data-section" style="border-color: #064e3b; background: #ecfdf5;"><span class="section-label" style="background:#ecfdf5; color:#064e3b;">1. CREDIT BUREAU INQUIRY</span>
+                    <div class="flex gap-4 items-end">
+                        <div class="flex-1"><label>Target CIF Number</label><input type="text" id="los-cibil-cif" placeholder="Enter CIF"></div>
+                        <div class="flex-1"><label>Fetch / Set CIBIL Score</label><input type="number" id="los-cibil-score" placeholder="e.g. 720"></div>
+                        <button onclick="setCibilScore()" class="pinnacle-btn" style="background:#d1fae5; border-color:#064e3b; color:#064e3b;">UPDATE SCORE</button>
+                    </div>
+                </div>
+                <div class="data-section"><span class="section-label">2. APPLICANT DETAILS</span>
+                    <div class="flex gap-6 items-end mb-6 pb-6 border-b border-gray-300">
+                        <div id="los-cif-box"><label>CIF Number</label><input type="text" id="los-cif"></div>
+                        <div><button onclick="fetchCifForLOS()" class="pinnacle-btn">FETCH DETAILS</button></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-6">
+                        <div><label>Applicant Name</label><input type="text" id="los-name"></div>
+                        <div><label>PAN Card</label><input type="text" id="los-pan"></div>
+                        <div><label>Monthly Income (₹)</label><input type="number" id="los-income"></div>
+                    </div>
+                </div>
+                <div class="data-section"><span class="section-label">3. LOAN PARAMETERS & PRICING</span>
+                    <div class="grid grid-cols-4 gap-6">
+                        <div><label>Loan Type</label><select id="los-type"><option>Personal Loan</option><option>Vehicle Loan</option><option>Home Loan</option></select></div>
+                        <div><label>Amount (₹)</label><input type="number" id="los-amt"></div>
+                        <div><label>ROI (%)</label><input type="number" id="los-roi" step="0.1" placeholder="e.g. 14.5"></div>
+                        <div><label>Tenure (Months)</label><input type="number" id="los-term" placeholder="e.g. 36"></div>
+                    </div>
+                    <div class="mt-6 border-t pt-4 grid grid-cols-3 gap-6">
+                        <div><label>Frequency</label><select id="los-freq"><option>Monthly</option><option>Quarterly</option></select></div>
+                        <div><label>Collateral Required?</label><select id="los-col-req"><option value="NO">No</option><option value="YES">Yes</option></select></div>
+                        <div><label>Collateral Value (₹)</label><input type="number" id="los-col-val" placeholder="0"></div>
+                    </div>
+                </div>
+                <button onclick="evaluateLoanRisk()" class="submit-main" style="background:#064e3b; color:white;">NEXT: EVALUATE KYC RISK & CIBIL</button>
+                <div id="los-risk-box" class="data-section hidden mt-8" style="background: #fffbeb; border-color: #b45309;">
+                    <span class="section-label" style="background: #fffbeb; color: #b45309;">4. RISK EVALUATION ENGINE</span>
+                    <div class="grid grid-cols-3 gap-6 font-bold text-lg text-center mb-6">
+                        <div class="border p-4 bg-white shadow-sm"><p class="text-xs text-gray-500 uppercase">CIBIL Score</p><p id="risk-score" class="text-[#000080]">-</p></div>
+                        <div class="border p-4 bg-white shadow-sm"><p class="text-xs text-gray-500 uppercase">Risk Band</p><p id="risk-band" class="text-[#000080]">-</p></div>
+                        <div class="border p-4 bg-white shadow-sm"><p class="text-xs text-gray-500 uppercase">LTV Ratio</p><p id="risk-ltv" class="text-[#000080]">-</p></div>
+                    </div>
+                    <div class="flex gap-6">
+                        <button onclick="processLoan('DECLINE')" class="submit-main !m-0 w-full" style="background:#7f1d1d; color:white;">DECLINE FILE</button>
+                        <button onclick="processLoan('APPROVE')" class="submit-main !m-0 w-full" style="background:#064e3b; color:white;">APPROVE & SANCTION</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [F9] LOS Process -->
+            <div id="mod-los-process" class="module">
+                <div class="bg-emerald-900 text-white p-2 px-4 mb-8 font-bold uppercase">Loan Processing & Disbursal Desk</div>
+                <div class="data-section" style="border-color: #991b1b; background: #fef2f2;"><span class="section-label" style="background: #fef2f2; color: #991b1b;">REJECTED FILES (DECLINED)</span>
+                    <table class="w-full text-left bg-white border border-gray-400"><thead class="bg-gray-200"><tr><th class="p-2 border text-sm">APP ID</th><th class="p-2 border text-sm">NAME</th><th class="p-2 border text-sm">AMOUNT</th><th class="p-2 border text-sm">REASON</th><th class="p-2 border text-sm">ACTION</th></tr></thead><tbody id="reject-tbody"></tbody></table>
+                </div>
+                <div class="data-section" style="border-color: #064e3b; background: #ecfdf5;"><span class="section-label" style="background: #ecfdf5; color: #064e3b;">READY FOR DISBURSAL (SANCTIONED)</span>
+                    <table class="w-full text-left bg-white border border-gray-400 mb-6"><thead class="bg-gray-200"><tr><th class="p-2 border text-sm">APP ID</th><th class="p-2 border text-sm">NAME</th><th class="p-2 border text-sm">SANCTION AMT</th><th class="p-2 border text-sm">INTEREST RATE</th><th class="p-2 border text-sm">ACTION</th></tr></thead><tbody id="sanction-tbody"></tbody></table>
+                    <div id="disburse-form" class="hidden border-t-2 border-emerald-900 pt-6 mt-6">
+                        <p class="font-bold text-emerald-900 uppercase mb-4">Disbursement Execution Form - <span id="dis-appid"></span></p>
+                        <div class="grid grid-cols-3 gap-6 mb-6">
+                            <div><label>Sanction Date</label><input type="text" id="dis-sanc-date" readonly class="bg-gray-200"></div>
+                            <div><label>1st EMI Date</label><input type="text" id="dis-emi-date" readonly class="bg-gray-200 font-bold" style="color:#047857;"></div>
+                            <div><label>Disburse Amount (₹)</label><input type="number" id="dis-amt"></div>
+                            <div><label>EMI Amount (₹)</label><input type="text" id="dis-emi-amt" readonly class="bg-gray-200 font-bold text-emerald-900"></div>
+                            <div class="col-span-2"><label>Credit CASA Acc</label><input type="text" id="dis-acc" placeholder="Target CASA Account"></div>
+                        </div>
+                        <button onclick="executeDisbursement()" class="submit-main w-full !m-0" style="background:#064e3b; color:white;">EXECUTE DISBURSEMENT</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- [F7] Exception Desk (God Mode) -->
+            <div id="mod-override" class="module">
+                <div class="bg-red-900 text-white p-2 px-4 mb-8 font-bold uppercase">SUPERVISOR EXCEPTION & OVERRIDE DESK</div>
+                <div class="data-section"><span class="section-label" style="background:#f4f4eb; color:#000080;">CASA TICKETS</span>
+                    <table class="w-full text-left bg-white border border-gray-400"><thead class="bg-gray-200"><tr><th class="p-2 border text-sm">Ticket ID</th><th class="p-2 border text-sm">Account</th><th class="p-2 border text-sm">Issue</th><th class="p-2 border text-sm">Date</th><th class="p-2 border text-sm">Action</th></tr></thead><tbody id="exc-tbody"></tbody></table>
+                </div>
+                <div class="data-section" style="border-color: #b45309; background: #fffbeb;"><span class="section-label" style="background:#fffbeb; color:#b45309;">LOAN ESCALATIONS</span>
+                    <table class="w-full text-left bg-white border border-gray-400"><thead class="bg-gray-200"><tr><th class="p-2 border text-sm">Ticket ID</th><th class="p-2 border text-sm">App ID</th><th class="p-2 border text-sm">Reason</th><th class="p-2 border text-sm">Action</th></tr></thead><tbody id="exc-loan-tbody"></tbody></table>
+                </div>
+                <div id="override-form-area" class="data-section hidden" style="background: #fff7ed; border-color: #ea580c;"><span class="section-label" style="background: #fff7ed; color: #9a3412;">MANUAL RECORD OVERRIDE</span>
+                    <div class="grid grid-cols-3 gap-6">
+                        <div><label>Target Account</label><input type="text" id="ov-acc" readonly class="bg-gray-200"></div><div><label>Status</label><select id="ov-stat" style="color:red; font-weight:bold; border: 1px solid red;"><option value="ACTIVE">ACTIVE</option><option value="FROZEN">FROZEN</option><option value="CLOSED">CLOSED</option></select></div><div><label>Balance (₹)</label><input type="number" id="ov-bal" style="font-weight:bold; color:red;"></div>
+                        
+                        <div class="col-span-3"><label>Status Change Remarks (Mandatory for Freeze/Close)</label><input type="text" id="ov-remarks" placeholder="Enter reason for status change or balance adjustment..." style="border:1px solid red;"></div>
+
+                        <div><label>Full Name</label><input type="text" id="ov-name"></div><div><label>Father</label><input type="text" id="ov-father"></div><div><label>Mother</label><input type="text" id="ov-mother"></div>
+                        <div><label>DOB</label><input type="date" id="ov-dob"></div><div><label>PAN</label><input type="text" id="ov-pan"></div><div><label>Aadhaar</label><input type="text" id="ov-aad" maxlength="12"></div>
+                        <div><label>Education</label><select id="ov-edu"><option>Graduation</option><option>12th Pass</option></select></div><div><label>Employment</label><select id="ov-emp"><option>Salaried</option><option>Self-Employed</option></select></div><div><label>Marital</label><select id="ov-marital"><option>Single</option><option>Married</option></select></div>
+                        <div><label>Mobile</label><input type="text" id="ov-mob"></div><div class="col-span-2"><label>Address</label><input type="text" id="ov-add"></div>
+                        <div><label>Nominee</label><input type="text" id="ov-nom-name"></div><div class="col-span-2"><label>Relation</label><input type="text" id="ov-nom-rel"></div>
+                    </div>
+                    <button onclick="executeAdminOverride()" class="submit-main" style="background: #991b1b; color: white; border: 1px solid black; width:100%; margin-top:30px;">AUTHORIZE SUPERVISOR OVERRIDE</button>
+                </div>
+
+        </main>
+    </div>
+
+    <!-- Error/Escalation Modal -->
+    <div id="error-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; align-items: center; justify-content: center;">
+        <div style="background: #f4f4eb; border: 2px solid #000080; padding: 25px; width: 500px; box-shadow: 5px 5px 15px rgba(0,0,0,0.5);">
+            <div style="background: #000080; color: white; padding: 8px; margin: -25px -25px 20px -25px; font-weight: bold; text-transform: uppercase; font-size: 14px; border-bottom: 2px solid #000;">Raise Exception Ticket</div>
+            <label style="display: block; font-weight: bold; font-size: 11px; margin-bottom: 8px; color: #333; text-transform: uppercase;">Target Account:</label><input type="text" id="error-modal-acc" style="width: 100%; border: 1px solid #777; padding: 10px; font-family: monospace; font-size: 14px; outline: none; margin-bottom: 20px; box-sizing: border-box;">
+            <label style="display: block; font-weight: bold; font-size: 11px; margin-bottom: 8px; color: #333; text-transform: uppercase;">Details:</label><textarea id="error-modal-text" rows="4" style="width: 100%; border: 1px solid #777; padding: 10px; font-family: monospace; font-size: 14px; outline: none; margin-bottom: 20px; box-sizing: border-box;"></textarea>
+            <div style="display: flex; justify-content: flex-end; gap: 15px;"><button onclick="closeErrorModal()" class="pinnacle-btn">CANCEL</button><button onclick="submitErrorModal()" class="pinnacle-btn" style="background: #fee2e2; color: #991b1b; border: 1px solid #991b1b;">SUBMIT</button></div>
+        </div>
+    </div>
+
+    <script src="bank.js"></script>
+    <script src="staff.js"></script>
+</body>
+</html>

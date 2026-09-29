@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEST Small Finance Bank - Core</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="loader-overlay" class="hidden">
+        <div class="spinner"></div>
+        <div id="loader-text" style="color:white; margin-top:15px; font-weight:bold;">Processing...</div>
+    </div>
+
+    <div id="custom-modal" class="hidden">
+        <div class="modal-box">
+            <h3 id="modal-title">System Alert</h3>
+            <div id="modal-body"></div>
+            <div class="modal-footer" id="modal-footer">
+                <button class="btn-action" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-header">
+        <div>
+            <h2 style="margin:0; color:white; border:none;">NEST Small Finance Bank</h2>
+        </div>
+        <div class="vault-display">Vault Balance: <span id="vault-amount" style="color: #FFD700;">₹10000000.00</span></div>
+    </div>
+
+    <div class="sidebar">
+        <button class="nav-btn active" onclick="switchTab('sec-account')">Customer Onboarding</button>
+        <button class="nav-btn" onclick="switchTab('sec-kyc')">Pending KYC Desk</button>
+        <button class="nav-btn" onclick="switchTab('sec-ledger')">Master Ledger</button>
+        <button class="nav-btn" onclick="switchTab('sec-exception')">Exception Desk</button>
+        <button class="nav-btn" onclick="switchTab('sec-loans')">Loan Origination (LOS)</button>
+        <button class="nav-btn" onclick="switchTab('sec-teller')">Teller / Cash</button>
+    </div>
+
+    <div class="workspace">
+
+        <div id="sec-account" class="module-section active">
+            <h2 class="section-title">Account Creation (CIF Generation)</h2>
+            <form id="form-onboarding" onsubmit="handleOnboarding(event)">
+                <div class="form-grid">
+                    <div class="form-group"><label>Full Name</label><input type="text" id="cust-name" required></div>
+                    <div class="form-group"><label>Date of Birth</label><input type="text" id="cust-dob" placeholder="DD/MM/YY" required></div>
+                    <div class="form-group"><label>Father's Name</label><input type="text" id="cust-father"></div>
+                    <div class="form-group"><label>Mother's Name</label><input type="text" id="cust-mother"></div>
+                    <div class="form-group"><label>Occupation</label>
+                        <select id="cust-occ">
+                            <option>Salaried</option><option>Self-Employed</option><option>Business</option><option>Student</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Education</label>
+                        <select id="cust-edu">
+                            <option>Undergraduate</option><option>Graduate</option><option>Post-Graduate</option><option>Professional</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Gender</label><select id="cust-gender"><option>M</option><option>F</option><option>O</option></select></div>
+                    <div class="form-group"><label>Marital Status</label><select id="cust-marital"><option>Single</option><option>Married</option></select></div>
+                    <div class="form-group"><label>PAN</label><input type="text" id="cust-pan" required></div>
+                    <div class="form-group"><label>Aadhaar</label><input type="text" id="cust-aadhaar" required></div>
+                    <div class="form-group"><label>Monthly Income</label><input type="number" id="cust-income" required></div>
+                    <div class="form-group"><label>Nominee Name</label><input type="text" id="cust-nominee"></div>
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label>Full KYC Address</label>
+                    <textarea id="cust-addr" rows="3" required></textarea>
+                </div>
+                <hr>
+                <div class="form-grid">
+                    <div class="form-group"><label>Account Product</label>
+                        <select id="cust-acctype" onchange="updateDebitCardOptions()">
+                            <optgroup label="Savings">
+                                <option value="SAV-LITE">NEST Lite Savings (MAB 0)</option>
+                                <option value="SAV-REG">Regular Savings (MAB 500)</option>
+                                <option value="SAV-PRIME">Prime Savings (MAB 1000)</option>
+                            </optgroup>
+                            <optgroup label="Current">
+                                <option value="CUR-LITE">Lite Current (MAB 0)</option>
+                                <option value="CUR-REG">Regular Current (MAB 1000)</option>
+                                <option value="CUR-PRIME">Prime Current (MAB 2000)</option>
+                            </optgroup>
+                            <optgroup label="Salary">
+                                <option value="SAL-REG">Regular Salaried (Min 8k)</option>
+                                <option value="SAL-PRIME">Prime Salaried (Min 15k)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="form-group"><label><input type="checkbox" id="issue-card" onchange="toggleCardDetails()"> Issue Debit Card</label>
+                        <select id="card-type" disabled></select>
+                    </div>
+                    <div class="form-group"><label>Delivery Option</label>
+                        <select id="delivery-opt" disabled><option>Branch</option><option>KYC Address</option></select>
+                    </div>
+                </div>
+                <button type="submit" class="btn-action">Submit to Pending KYC</button>
+            </form>
+        </div>
+
+        <div id="sec-kyc" class="module-section">
+            <h2 class="section-title">Pending KYC Queue</h2>
+            <table>
+                <thead><tr><th>Name</th><th>PAN</th><th>Acc Type</th><th>Action</th></tr></thead>
+                <tbody id="kyc-table-body"></tbody>
+            </table>
+        </div>
+
+        <div id="sec-ledger" class="module-section">
+            <h2 class="section-title">Master Ledger</h2>
+            <select id="ledger-filter" onchange="renderLedger()" style="margin-bottom:15px; padding:5px;">
+                <option value="ACTIVE">Active Customers</option>
+                <option value="CLOSED">Closed Accounts</option>
+                <option value="FREEZED">Freezed Accounts</option>
+            </select>
+            <table>
+                <thead><tr><th>CIF</th><th>Acc Number</th><th>Name</th><th>Balance</th><th>Actions</th></tr></thead>
+                <tbody id="ledger-table-body"></tbody>
+            </table>
+        </div>
+
+        <div id="sec-exception" class="module-section">
+            <h2 class="section-title">Exception Desk (Supervisor)</h2>
+            <table>
+                <thead><tr><th>Target CIF</th><th>Remark/Reason</th><th>Type</th><th>Actions</th></tr></thead>
+                <tbody id="exception-table-body"></tbody>
+            </table>
+        </div>
+
+        <div id="sec-loans" class="module-section">
+            <h2 class="section-title">Loan Origination System (LOS)</h2>
+            
+            <div class="los-tabs">
+                <button onclick="switchLosTab('los-originate')" class="active">1. Origination</button>
+                <button onclick="switchLosTab('los-sanction')">2. Sanctioning</button>
+                <button onclick="switchLosTab('los-disburse')">3. Disbursement</button>
+            </div>
+
+            <div id="los-originate" class="los-view" style="display:block;">
+                <h3>New Application</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>Existing Customer?</label>
+                        <select id="loan-existing" onchange="toggleLoanCIF()"><option value="NO">No</option><option value="YES">Yes</option></select>
+                    </div>
+                    <div class="form-group" id="loan-cif-box" style="display:none;">
+                        <label>CIF Number</label>
+                        <input type="text" id="loan-cif">
+                        <button class="btn-action" style="margin-top:5px;" onclick="fetchCustomerForLoan()">Fetch</button>
+                    </div>
+                </div>
+                <hr>
+                <div class="form-grid">
+                    <div class="form-group"><label>Customer Name</label><input type="text" id="ln-name"></div>
+                    <div class="form-group"><label>Monthly Income</label><input type="number" id="ln-income"></div>
+                    <div class="form-group"><label>Requested Amount</label><input type="number" id="ln-req-amt"></div>
+                    <div class="form-group"><label>Manual CIBIL Score</label><input type="number" id="ln-cibil" oninput="calculateRisk()"></div>
+                    <div class="form-group"><label>KYC Risk Status</label><input type="text" id="ln-risk" readonly style="background:#eee; font-weight:bold;"></div>
+                </div>
+                <button class="btn-action" onclick="processLoanApproval()">Review & Approve</button>
+            </div>
+
+            <div id="los-sanction" class="los-view" style="display:none;">
+                <h3>Pending Sanctions</h3>
+                <table style="margin-bottom:20px;">
+                    <thead><tr><th>App ID</th><th>Name</th><th>Requested</th><th>Action</th></tr></thead>
+                    <tbody id="sanction-table"></tbody>
+                </table>
+                <div id="sanction-panel" style="display:none; border:1px solid #ccc; padding:15px; background:#f9f9f9;">
+                    <h4>Sanction Details</h4>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Sanctioned Amount</label><input type="number" id="sanc-amt"></div>
+                        <div class="form-group"><label>Interest Rate (%)</label><input type="number" id="sanc-roi" step="0.1"></div>
+                        <div class="form-group"><label>Tenure (Months)</label><input type="number" id="sanc-tenure"></div>
+                        <div class="form-group"><label>EMI Amount</label><input type="number" id="sanc-emi" readonly style="background:#eee;"></div>
+                        <div class="form-group"><label>Sanction Expiry</label><input type="text" id="sanc-expiry" readonly style="background:#eee;"></div>
+                    </div>
+                    <button class="btn-action" onclick="calculateEMI()" style="background:#17a2b8;">Calc EMI</button>
+                    <button class="btn-action" onclick="generateSanction()">Issue Sanction Letter</button>
+                </div>
+            </div>
+
+            <div id="los-disburse" class="los-view" style="display:none;">
+                <h3>Pending Disbursements</h3>
+                <table>
+                    <thead><tr><th>Loan A/C</th><th>Name</th><th>Sanctioned Amt</th><th>Action</th></tr></thead>
+                    <tbody id="disburse-table"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="sec-teller" class="module-section">
+            <h2 class="section-title">Teller / Cash Desk</h2>
+            <div class="form-grid">
+                <div class="form-group"><label>Account Number</label><input type="text" id="teller-acc"></div>
+                <div class="form-group"><label>Transaction Type</label>
+                    <select id="teller-type"><option value="DEP">Deposit</option><option value="WID">Withdrawal</option></select>
+                </div>
+                <div class="form-group"><label>Amount (₹)</label><input type="number" id="teller-amount"></div>
+            </div>
+            <button class="btn-action" onclick="executeTransaction()">Execute & Print Receipt</button>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
